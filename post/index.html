@@ -6,7 +6,7 @@
 
 <link rel='canonical' href='https://hugo.congyu.dpdns.org/post/'>
 
-<link rel="stylesheet" href="/scss/style.min.21dfdaaaa32d257d32c0ad95a46ab45137d9d1347a6a44ee5c8d699f38277b9f.css"><meta property='og:title' content="Posts">
+<link rel="stylesheet" href="/scss/style.min.4b46737e715e0b06a563e8f2e526bb310dfa8940cd076d72a46588ac1e5aa8a7.css"><meta property='og:title' content="Posts">
 <meta property='og:description' content="演示说明">
 <meta property='og:url' content='https://hugo.congyu.dpdns.org/post/'>
 <meta property='og:site_name' content='丛雨啊啊啊'>
@@ -495,6 +495,7 @@
     var pjax = new Pjax({
         selectors: [
             ".main-container"
+            ".js-Pjax"
         ]
     })
 
@@ -537,18 +538,52 @@
     })
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+<div class="js-Pjax">
+    <script context="inline">
+        
+        function initComments() {
+            
+            
+            
+            
+            const existingScript = document.querySelector('script[src*="twikoo"]');
+            if (existingScript) {
+                existingScript.remove();
+            }
+            
+            
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/twikoo@1.6.39/dist/twikoo.all.min.js';
+            script.async = true;
+            
+            script.onload = function() {
+                
+                window.twikoo.init({
+                    envId: 'https://twikoo.congyu.dpdns.org',
+                    el: '#tcomment',
+                    lang: 'zh-CN'
+                }).then(function() {
+                    console.log('Twikoo 评论初始化成功');
+                }).catch(function(err) {
+                    console.error('Twikoo 评论初始化失败: ', err);
+                });
+            };
+            
+            script.onerror = function() {
+                console.error('Twikoo 脚本加载失败');
+            };
+            
+            document.head.appendChild(script);
+        }
 
-<meting-js
-	server="netease"
-	type="playlist"
-	id="60198"
-	lrcType="3"
-	fixed="true">
-</meting-js>
-
+        
+        
+        document.addEventListener('pjax:complete', initComments);
+        
+        initComments();
+    </script>
+<div>
 <script>
     async function renderKaTeX() {
         
@@ -713,6 +748,55 @@
     initTocHide()
 </script>
 
+
+<script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+
+<meting-js
+	server="netease"
+	type="playlist"
+	id="60198"
+	lrcType="3"
+	fixed="true">
+</meting-js>
+
+<script>
+    ...
+    
+
+    window.onbeforeunload = () => {
+        
+        const playInfo = {
+            index: ap.list.index,
+            currentTime: ap.audio.currentTime,
+            paused: ap.paused
+        };
+        localStorage.setItem("playInfo", JSON.stringify(playInfo));
+    };
+
+    
+
+    window.onload = () => {
+        
+        const playInfo = JSON.parse(localStorage.getItem("playInfo"));
+        if (!playInfo) {
+            return;
+        }
+        
+        ap.list.switch(playInfo.index);
+        
+        setTimeout(() => {
+            
+            ap.seek(playInfo.currentTime);
+            
+            if (!playInfo.paused) {
+                ap.play()
+            }
+        }, 500);
+    };
+</script>
+
 <style>
     #backTopBtn {
         display: none;
@@ -759,52 +843,73 @@
     initScrollTop();
 </script>
 
-
 <script>
+  const cdnPath = "https://cdn.jsdelivr.net/gh/letere-gzj/live2d-widget-v3@main";
+  const cdn2Path = "https://cdn.jsdelivr.net/gh/xiaocongyu66/hugo-resource-moc@main/liv2d/moc3/"
+  const resPath = "/waifu"
+  
+  const config = {
     
-    const cssPath = "https://hugo.congyu.dpdns.org/waifu/waifu.css"
-    const tipsJsonPath = "https://hugo.congyu.dpdns.org/waifu/waifu-tips.json"
+    path: {
+      homePath: "/",
+      modelPath: cdn2Path + "/",
+      cssPath: resPath + "/waifu.css",
+      tipsJsonPath: resPath + "/waifu-tips.json",
+      tipsJsPath: cdnPath + "/waifu-tips.js",
+      live2dCorePath: cdnPath + "/Core/live2dcubismcore.js",
+      live2dSdkPath: cdnPath + "/live2d-sdk.js"
+    },
     
-    const live2d_path = "https://fastly.jsdelivr.net/gh/stevenjoezhang/live2d-widget@latest/";
+    tools: ["hitokoto", "express", "switch-model", "switch-texture", "photo", "info", "quit"],
+    
+    drag: {
+      enable: true,
+      direction: ["x", "y"]
+    },
+    
+    switchType: "order"
+  }
 
-    
-    function loadExternalResource(url, type) {
-        return new Promise((resolve, reject) => {
-            let tag;
-            if (type === "css") {
-                tag = document.createElement("link");
-                tag.rel = "stylesheet";
-                tag.href = url;
-            }
-            else if (type === "js") {
-                tag = document.createElement("script");
-                tag.src = url;
-            }
-            if (tag) {
-                tag.onload = () => resolve(url);
-                tag.onerror = () => reject(url);
-                document.head.appendChild(tag);
-            }
-        });
-    }
+  
+  if (screen.width >= 768) {
+    Promise.all([
+      loadExternalResource(config.path.cssPath, "css"),
+      loadExternalResource(config.path.live2dCorePath, "js"),
+      loadExternalResource(config.path.live2dSdkPath, "js"),
+      loadExternalResource(config.path.tipsJsPath, "js")
+    ]).then(() => {
+      initWidget({
+        waifuPath: config.path.tipsJsonPath,
+        cdnPath: config.path.modelPath,
+        tools: config.tools,
+        dragEnable: config.drag.enable,
+        dragDirection: config.drag.direction,
+        switchType: config.switchType
+      });
+    });
+  }
 
-    
-    if (screen.width >= 768) {
-        Promise.all([
-            loadExternalResource(cssPath, "css"),
-            loadExternalResource(live2d_path + "live2d.min.js", "js"),
-            loadExternalResource(live2d_path + "waifu-tips.js", "js")
-        ]).then(() => {
-            
-            initWidget({
-                waifuPath: tipsJsonPath,
-                cdnPath: "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/",
-                tools: ["hitokoto", "asteroids", "switch-model", "switch-texture", "photo", "info", "quit"]
-            });
-        });
-    }
+  
+  function loadExternalResource(url, type) {
+    return new Promise((resolve, reject) => {
+      let tag;
+      if (type === "css") {
+        tag = document.createElement("link");
+        tag.rel = "stylesheet";
+        tag.href = url;
+      }
+      else if (type === "js") {
+        tag = document.createElement("script");
+        tag.src = url;
+      }
+      if (tag) {
+        tag.onload = () => resolve(url);
+        tag.onerror = () => reject(url);
+        document.head.appendChild(tag);
+      }
+    });
+  }
 </script>
-
 
 
 
